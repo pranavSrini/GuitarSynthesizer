@@ -1,0 +1,13 @@
+{
+  "name": "guitarsynth-blues-generator",
+  "version": "1.0.0",
+  "description": "Blues pentatonic solo generator with guitar synthesis",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": ["guitar", "blues", "pentatonic", "music", "synthesis"],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blues Pentatonic Solo Generator</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎸 Blues Pentatonic Solo Generator</h1>
+            <p>Generate authentic blues solos using pentatonic scales and classic techniques</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Control Panel -->
+            <section class="control-panel">
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="key-select">Key</label>
+                        <select id="key-select">
+                            <option value="60">C</option>
+                            <option value="61">C#</option>
+                            <option value="62">D</option>
+                            <option value="63">D#</option>
+                            <option value="64">E</option>
+                            <option value="65">F</option>
+                            <option value="66">F#</option>
+                            <option value="67">G</option>
+                            <option value="68">G#</option>
+                            <option value="69">A</option>
+                            <option value="70">A#</option>
+                            <option value="71">B</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="scale-select">Scale Type</label>
+                        <select id="scale-select">
+                            <option value="blues">Blues Pentatonic</option>
+                            <option value="minor">Minor Pentatonic</option>
+                            <option value="major">Major Pentatonic</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="tempo-slider">Tempo: <span id="tempo-value">120</span> BPM</label>
+                        <input type="range" id="tempo-slider" min="60" max="180" value="120">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="phrases-slider">Phrases: <span id="phrases-value">4</span></label>
+                        <input type="range" id="phrases-slider" min="2" max="8" value="4">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="progression-select">Progression</label>
+                        <select id="progression-select">
+                            <option value="free">Free Solo</option>
+                            <option value="twelve_bar">12-Bar Blues</option>
+                            <option value="eight_bar">8-Bar Blues</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="volume-slider">Volume: <span id="volume-value">30</span>%</label>
+                        <input type="range" id="volume-slider" min="0" max="100" value="30">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="generate-btn" class="btn btn-primary">Generate Solo</button>
+                    <button id="play-btn" class="btn btn-secondary" disabled>Play Solo</button>
+                    <button id="stop-btn" class="btn btn-danger" disabled>Stop</button>
+                    <button id="download-btn" class="btn btn-info" disabled>Download MIDI</button>
+                </div>
+            </section>
+
+            <!-- Solo Display -->
+            <section class="solo-display">
+                <h2>Generated Solo</h2>
+                <div id="solo-info" class="solo-info">
+                    <p>Click "Generate Solo" to create a new blues solo</p>
+                </div>
+                
+                <div id="solo-notation" class="solo-notation">
+                    <!-- Solo will be displayed here -->
+                </div>
+
+                <div class="playback-controls">
+                    <div class="progress-container">
+                        <div id="progress-bar" class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="progress-time">0:00 / 0:00</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technique Analysis -->
+            <section class="technique-analysis">
+                <h2>Blues Techniques Used</h2>
+                <div id="techniques-display" class="techniques-grid">
+                    <!-- Technique analysis will be displayed here -->
+                </div>
+            </section>
+
+            <!-- Scale Visualization -->
+            <section class="scale-visualization">
+                <h2>Pentatonic Scale</h2>
+                <div id="scale-display" class="scale-display">
+                    <!-- Scale notes will be displayed here -->
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Built with Web Audio API • Authentic blues pentatonic solo generation</p>
+        </footer>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Generating your blues solo...</p>
+    </div>
+
+    <script src="src/bluesGenerator.js"></script>
+    <script src="src/audioSynthesis.js"></script>
+    <script src="src/app.js"></script>
+</body>
+</html>
