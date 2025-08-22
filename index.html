@@ -69,6 +69,167 @@
                     </div>
                 </div>
 
+                <!-- Guitar Effects Section -->
+                <div class="effects-section">
+                    <h3>Guitar Effects Pedals 🎛️</h3>
+                    <div class="effects-grid">
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="distortion-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Distortion
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="distortion-gain">Gain</label>
+                                    <input type="range" id="distortion-gain" min="0" max="100" value="50" class="effect-knob">
+                                    <span class="knob-value">50</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="distortion-tone">Tone</label>
+                                    <input type="range" id="distortion-tone" min="0" max="100" value="50" class="effect-knob">
+                                    <span class="knob-value">50</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="delay-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Delay
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="delay-time">Time</label>
+                                    <input type="range" id="delay-time" min="50" max="1000" value="300" class="effect-knob">
+                                    <span class="knob-value">300ms</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="delay-feedback">Feedback</label>
+                                    <input type="range" id="delay-feedback" min="0" max="90" value="30" class="effect-knob">
+                                    <span class="knob-value">30%</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="delay-mix">Mix</label>
+                                    <input type="range" id="delay-mix" min="0" max="100" value="25" class="effect-knob">
+                                    <span class="knob-value">25%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="chorus-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Chorus
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="chorus-rate">Rate</label>
+                                    <input type="range" id="chorus-rate" min="0.1" max="5" value="1.5" step="0.1" class="effect-knob">
+                                    <span class="knob-value">1.5Hz</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="chorus-depth">Depth</label>
+                                    <input type="range" id="chorus-depth" min="0" max="100" value="50" class="effect-knob">
+                                    <span class="knob-value">50%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="compressor-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Compressor
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="compressor-threshold">Threshold</label>
+                                    <input type="range" id="compressor-threshold" min="-60" max="0" value="-24" class="effect-knob">
+                                    <span class="knob-value">-24dB</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="compressor-ratio">Ratio</label>
+                                    <input type="range" id="compressor-ratio" min="1" max="20" value="4" class="effect-knob">
+                                    <span class="knob-value">4:1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="wah-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Auto-Wah
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="wah-frequency">Frequency</label>
+                                    <input type="range" id="wah-frequency" min="200" max="2000" value="800" class="effect-knob">
+                                    <span class="knob-value">800Hz</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="wah-q">Q Factor</label>
+                                    <input type="range" id="wah-q" min="1" max="30" value="10" class="effect-knob">
+                                    <span class="knob-value">10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="eq-toggle">
+                                    <span class="toggle-switch"></span>
+                                    3-Band EQ
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="eq-bass">Bass</label>
+                                    <input type="range" id="eq-bass" min="-15" max="15" value="0" class="effect-knob">
+                                    <span class="knob-value">0dB</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="eq-mid">Mid</label>
+                                    <input type="range" id="eq-mid" min="-15" max="15" value="0" class="effect-knob">
+                                    <span class="knob-value">0dB</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="eq-treble">Treble</label>
+                                    <input type="range" id="eq-treble" min="-15" max="15" value="0" class="effect-knob">
+                                    <span class="knob-value">0dB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Effect Presets -->
+                    <div class="preset-section">
+                        <label for="effect-preset">Effect Presets:</label>
+                        <select id="effect-preset">
+                            <option value="clean">Clean</option>
+                            <option value="blues">Classic Blues</option>
+                            <option value="rock">Rock Crunch</option>
+                            <option value="lead">Lead Guitar</option>
+                            <option value="ambient">Ambient</option>
+                        </select>
+                        <button id="apply-preset-btn" class="btn btn-secondary">Apply Preset</button>
+                    </div>
+                </div>
+
                 <div class="action-buttons">
                     <button id="generate-btn" class="btn btn-primary">Generate Solo</button>
                     <button id="play-btn" class="btn btn-secondary" disabled>Play Solo</button>

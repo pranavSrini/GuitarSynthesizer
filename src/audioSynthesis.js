@@ -15,6 +15,19 @@ class GuitarSynthesizer {
             distortion: 0.1,
             reverb: 0.3
         };
+
+        // Effect nodes and parameters
+        this.effects = {
+            distortion: { enabled: false, gain: 50, tone: 50, node: null },
+            delay: { enabled: false, time: 300, feedback: 30, mix: 25, node: null },
+            chorus: { enabled: false, rate: 1.5, depth: 50, node: null },
+            compressor: { enabled: false, threshold: -24, ratio: 4, node: null },
+            wah: { enabled: false, frequency: 800, q: 10, node: null },
+            eq: { enabled: false, bass: 0, mid: 0, treble: 0, nodes: null }
+        };
+
+        // Effect chain
+        this.effectChain = [];
     }
 
     async initialize() {
@@ -30,6 +43,9 @@ class GuitarSynthesizer {
 
             // Create reverb
             await this.createReverb();
+            
+            // Initialize effects
+            this.initializeEffects();
             
             this.isInitialized = true;
             console.log('Guitar synthesizer initialized');
@@ -73,6 +89,283 @@ class GuitarSynthesizer {
         return impulse;
     }
 
+    initializeEffects() {
+        // Create all effect nodes
+        this.createDistortionEffect();
+        this.createDelayEffect();
+        this.createChorusEffect();
+        this.createCompressorEffect();
+        this.createWahEffect();
+        this.createEQEffect();
+        
+        // Build initial effect chain
+        this.rebuildEffectChain();
+    }
+
+    createDistortionEffect() {
+        const distortion = this.audioContext.createWaveShaper();
+        const preGain = this.audioContext.createGain();
+        const postGain = this.audioContext.createGain();
+        const toneFilter = this.audioContext.createBiquadFilter();
+        
+        toneFilter.type = 'lowpass';
+        toneFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+        
+        preGain.connect(distortion);
+        distortion.connect(toneFilter);
+        toneFilter.connect(postGain);
+        
+        this.effects.distortion.node = { preGain, distortion, toneFilter, postGain, input: preGain, output: postGain };
+        this.updateDistortionSettings();
+    }
+
+    createDelayEffect() {
+        const delayNode = this.audioContext.createDelay(1.0);
+        const feedbackGain = this.audioContext.createGain();
+        const wetGain = this.audioContext.createGain();
+        const dryGain = this.audioContext.createGain();
+        const mixGain = this.audioContext.createGain();
+        
+        // Create delay feedback loop
+        delayNode.connect(feedbackGain);
+        feedbackGain.connect(delayNode);
+        delayNode.connect(wetGain);
+        wetGain.connect(mixGain);
+        dryGain.connect(mixGain);
+        
+        this.effects.delay.node = { 
+            delay: delayNode, 
+            feedback: feedbackGain, 
+            wet: wetGain, 
+            dry: dryGain, 
+            mix: mixGain,
+            input: (source) => { source.connect(delayNode); source.connect(dryGain); },
+            output: mixGain 
+        };
+        this.updateDelaySettings();
+    }
+
+    createChorusEffect() {
+        const delayNode = this.audioContext.createDelay(0.05);
+        const lfo = this.audioContext.createOscillator();
+        const lfoGain = this.audioContext.createGain();
+        const wetGain = this.audioContext.createGain();
+        const dryGain = this.audioContext.createGain();
+        const mixGain = this.audioContext.createGain();
+        
+        lfo.frequency.setValueAtTime(this.effects.chorus.rate, this.audioContext.currentTime);
+        lfo.connect(lfoGain);
+        lfoGain.connect(delayNode.delayTime);
+        
+        delayNode.connect(wetGain);
+        wetGain.connect(mixGain);
+        dryGain.connect(mixGain);
+        
+        lfo.start();
+        
+        this.effects.chorus.node = { 
+            delay: delayNode, 
+            lfo, 
+            lfoGain, 
+            wet: wetGain, 
+            dry: dryGain, 
+            mix: mixGain,
+            input: (source) => { source.connect(delayNode); source.connect(dryGain); },
+            output: mixGain 
+        };
+        this.updateChorusSettings();
+    }
+
+    createCompressorEffect() {
+        const compressor = this.audioContext.createDynamicsCompressor();
+        
+        this.effects.compressor.node = { 
+            compressor, 
+            input: compressor, 
+            output: compressor 
+        };
+        this.updateCompressorSettings();
+    }
+
+    createWahEffect() {
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'bandpass';
+        
+        this.effects.wah.node = { 
+            filter, 
+            input: filter, 
+            output: filter 
+        };
+        this.updateWahSettings();
+    }
+
+    createEQEffect() {
+        const bassFilter = this.audioContext.createBiquadFilter();
+        const midFilter = this.audioContext.createBiquadFilter();
+        const trebleFilter = this.audioContext.createBiquadFilter();
+        
+        bassFilter.type = 'lowshelf';
+        bassFilter.frequency.setValueAtTime(320, this.audioContext.currentTime);
+        
+        midFilter.type = 'peaking';
+        midFilter.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+        midFilter.Q.setValueAtTime(1, this.audioContext.currentTime);
+        
+        trebleFilter.type = 'highshelf';
+        trebleFilter.frequency.setValueAtTime(3200, this.audioContext.currentTime);
+        
+        bassFilter.connect(midFilter);
+        midFilter.connect(trebleFilter);
+        
+        this.effects.eq.nodes = { 
+            bass: bassFilter, 
+            mid: midFilter, 
+            treble: trebleFilter,
+            input: bassFilter, 
+            output: trebleFilter 
+        };
+        this.updateEQSettings();
+    }
+
+    updateDistortionSettings() {
+        if (!this.effects.distortion.node) return;
+        
+        const { gain, tone } = this.effects.distortion;
+        const { preGain, distortion, toneFilter, postGain } = this.effects.distortion.node;
+        
+        // Create distortion curve
+        const samples = 44100;
+        const curve = new Float32Array(samples);
+        const deg = Math.PI / 180;
+        const amount = gain;
+        
+        for (let i = 0; i < samples; i++) {
+            const x = (i * 2) / samples - 1;
+            curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+        }
+        
+        distortion.curve = curve;
+        distortion.oversample = '4x';
+        
+        preGain.gain.setValueAtTime(1 + (gain / 100), this.audioContext.currentTime);
+        postGain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        toneFilter.frequency.setValueAtTime(500 + (tone / 100) * 3000, this.audioContext.currentTime);
+    }
+
+    updateDelaySettings() {
+        if (!this.effects.delay.node) return;
+        
+        const { time, feedback, mix } = this.effects.delay;
+        const { delay, feedback: feedbackGain, wet, dry } = this.effects.delay.node;
+        
+        delay.delayTime.setValueAtTime(time / 1000, this.audioContext.currentTime);
+        feedbackGain.gain.setValueAtTime(feedback / 100, this.audioContext.currentTime);
+        
+        const wetLevel = mix / 100;
+        const dryLevel = 1 - wetLevel;
+        
+        wet.gain.setValueAtTime(wetLevel, this.audioContext.currentTime);
+        dry.gain.setValueAtTime(dryLevel, this.audioContext.currentTime);
+    }
+
+    updateChorusSettings() {
+        if (!this.effects.chorus.node) return;
+        
+        const { rate, depth } = this.effects.chorus;
+        const { lfo, lfoGain, wet, dry } = this.effects.chorus.node;
+        
+        lfo.frequency.setValueAtTime(rate, this.audioContext.currentTime);
+        lfoGain.gain.setValueAtTime(0.002 * (depth / 100), this.audioContext.currentTime);
+        
+        const wetLevel = 0.5;
+        const dryLevel = 0.5;
+        
+        wet.gain.setValueAtTime(wetLevel, this.audioContext.currentTime);
+        dry.gain.setValueAtTime(dryLevel, this.audioContext.currentTime);
+    }
+
+    updateCompressorSettings() {
+        if (!this.effects.compressor.node) return;
+        
+        const { threshold, ratio } = this.effects.compressor;
+        const { compressor } = this.effects.compressor.node;
+        
+        compressor.threshold.setValueAtTime(threshold, this.audioContext.currentTime);
+        compressor.ratio.setValueAtTime(ratio, this.audioContext.currentTime);
+        compressor.attack.setValueAtTime(0.003, this.audioContext.currentTime);
+        compressor.release.setValueAtTime(0.25, this.audioContext.currentTime);
+    }
+
+    updateWahSettings() {
+        if (!this.effects.wah.node) return;
+        
+        const { frequency, q } = this.effects.wah;
+        const { filter } = this.effects.wah.node;
+        
+        filter.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        filter.Q.setValueAtTime(q, this.audioContext.currentTime);
+    }
+
+    updateEQSettings() {
+        if (!this.effects.eq.nodes) return;
+        
+        const { bass, mid, treble } = this.effects.eq;
+        const { bass: bassFilter, mid: midFilter, treble: trebleFilter } = this.effects.eq.nodes;
+        
+        bassFilter.gain.setValueAtTime(bass, this.audioContext.currentTime);
+        midFilter.gain.setValueAtTime(mid, this.audioContext.currentTime);
+        trebleFilter.gain.setValueAtTime(treble, this.audioContext.currentTime);
+    }
+
+    rebuildEffectChain() {
+        this.effectChain = [];
+        
+        // Add enabled effects to chain in order
+        const effectOrder = ['compressor', 'distortion', 'wah', 'eq', 'chorus', 'delay'];
+        
+        effectOrder.forEach(effectName => {
+            const effect = this.effects[effectName];
+            if (effect.enabled && effect.node) {
+                this.effectChain.push(effect.node);
+            }
+        });
+    }
+
+    updateEffect(effectName, parameter, value) {
+        if (!this.effects[effectName]) return;
+        
+        this.effects[effectName][parameter] = value;
+        
+        // Update the specific effect settings
+        switch (effectName) {
+            case 'distortion':
+                this.updateDistortionSettings();
+                break;
+            case 'delay':
+                this.updateDelaySettings();
+                break;
+            case 'chorus':
+                this.updateChorusSettings();
+                break;
+            case 'compressor':
+                this.updateCompressorSettings();
+                break;
+            case 'wah':
+                this.updateWahSettings();
+                break;
+            case 'eq':
+                this.updateEQSettings();
+                break;
+        }
+    }
+
+    toggleEffect(effectName, enabled) {
+        if (!this.effects[effectName]) return;
+        
+        this.effects[effectName].enabled = enabled;
+        this.rebuildEffectChain();
+    }
+
     createGuitarOscillator(frequency, duration, technique = 'normal') {
         const oscillators = [];
         const gainNode = this.audioContext.createGain();
@@ -104,9 +397,9 @@ class GuitarSynthesizer {
         // Apply technique-specific modifications
         this.applyTechnique(oscillators, filterNode, gainNode, technique, frequency, duration);
 
-        // Connect audio graph
+        // Connect audio graph through effects chain
         filterNode.connect(gainNode);
-        gainNode.connect(this.masterGain);
+        this.connectThroughEffects(gainNode);
         
         if (this.reverbNode) {
             const reverbSend = this.audioContext.createGain();
@@ -262,6 +555,90 @@ class GuitarSynthesizer {
 
     updateSynthParams(params) {
         Object.assign(this.synthParams, params);
+    }
+
+    connectThroughEffects(sourceNode) {
+        let currentNode = sourceNode;
+        
+        // Connect through effect chain
+        this.effectChain.forEach(effect => {
+            if (typeof effect.input === 'function') {
+                effect.input(currentNode);
+            } else {
+                currentNode.connect(effect.input);
+            }
+            currentNode = effect.output;
+        });
+        
+        // Connect final output to master gain
+        currentNode.connect(this.masterGain);
+    }
+
+    // Effect presets
+    applyEffectPreset(presetName) {
+        const presets = {
+            clean: {
+                distortion: { enabled: false },
+                delay: { enabled: false },
+                chorus: { enabled: false },
+                compressor: { enabled: false },
+                wah: { enabled: false },
+                eq: { enabled: false }
+            },
+            blues: {
+                distortion: { enabled: true, gain: 35, tone: 60 },
+                delay: { enabled: false },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -18, ratio: 3 },
+                wah: { enabled: false },
+                eq: { enabled: true, bass: 2, mid: 3, treble: 1 }
+            },
+            rock: {
+                distortion: { enabled: true, gain: 65, tone: 45 },
+                delay: { enabled: false },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -15, ratio: 6 },
+                wah: { enabled: false },
+                eq: { enabled: true, bass: 4, mid: 2, treble: 3 }
+            },
+            lead: {
+                distortion: { enabled: true, gain: 75, tone: 70 },
+                delay: { enabled: true, time: 250, feedback: 25, mix: 30 },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -12, ratio: 8 },
+                wah: { enabled: false },
+                eq: { enabled: true, bass: 1, mid: 5, treble: 4 }
+            },
+            ambient: {
+                distortion: { enabled: false },
+                delay: { enabled: true, time: 500, feedback: 45, mix: 50 },
+                chorus: { enabled: true, rate: 0.8, depth: 70 },
+                compressor: { enabled: false },
+                wah: { enabled: false },
+                eq: { enabled: true, bass: -2, mid: 0, treble: 2 }
+            }
+        };
+
+        const preset = presets[presetName];
+        if (!preset) return;
+
+        Object.keys(preset).forEach(effectName => {
+            const effectSettings = preset[effectName];
+            
+            // Toggle effect
+            this.toggleEffect(effectName, effectSettings.enabled);
+            
+            // Update parameters
+            Object.keys(effectSettings).forEach(param => {
+                if (param !== 'enabled') {
+                    this.updateEffect(effectName, param, effectSettings[param]);
+                }
+            });
+        });
+    }
+
+    getEffectSettings() {
+        return this.effects;
     }
 
     dispose() {

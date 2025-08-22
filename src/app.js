@@ -12,6 +12,11 @@ class BluesApp {
         this.initializeElements();
         this.bindEvents();
         this.updateUI();
+        
+        // Initialize effect UI after synthesizer is ready
+        setTimeout(() => {
+            this.initializeEffectUI();
+        }, 100);
     }
 
     initializeElements() {
@@ -40,6 +45,45 @@ class BluesApp {
         this.progressFill = document.getElementById('progress-fill');
         this.progressTime = document.getElementById('progress-time');
         this.loading = document.getElementById('loading');
+
+        // Effect elements
+        this.effectElements = {
+            distortion: {
+                toggle: document.getElementById('distortion-toggle'),
+                gain: document.getElementById('distortion-gain'),
+                tone: document.getElementById('distortion-tone')
+            },
+            delay: {
+                toggle: document.getElementById('delay-toggle'),
+                time: document.getElementById('delay-time'),
+                feedback: document.getElementById('delay-feedback'),
+                mix: document.getElementById('delay-mix')
+            },
+            chorus: {
+                toggle: document.getElementById('chorus-toggle'),
+                rate: document.getElementById('chorus-rate'),
+                depth: document.getElementById('chorus-depth')
+            },
+            compressor: {
+                toggle: document.getElementById('compressor-toggle'),
+                threshold: document.getElementById('compressor-threshold'),
+                ratio: document.getElementById('compressor-ratio')
+            },
+            wah: {
+                toggle: document.getElementById('wah-toggle'),
+                frequency: document.getElementById('wah-frequency'),
+                q: document.getElementById('wah-q')
+            },
+            eq: {
+                toggle: document.getElementById('eq-toggle'),
+                bass: document.getElementById('eq-bass'),
+                mid: document.getElementById('eq-mid'),
+                treble: document.getElementById('eq-treble')
+            }
+        };
+
+        this.effectPresetSelect = document.getElementById('effect-preset');
+        this.applyPresetBtn = document.getElementById('apply-preset-btn');
     }
 
     bindEvents() {
@@ -67,6 +111,133 @@ class BluesApp {
         // Scale display update on key/scale change
         this.keySelect.addEventListener('change', () => this.updateScaleDisplay());
         this.scaleSelect.addEventListener('change', () => this.updateScaleDisplay());
+
+        // Effect controls
+        this.bindEffectEvents();
+        
+        // Preset controls
+        this.applyPresetBtn.addEventListener('click', () => this.applyEffectPreset());
+    }
+
+    bindEffectEvents() {
+        Object.keys(this.effectElements).forEach(effectName => {
+            const effect = this.effectElements[effectName];
+            
+            // Toggle switches
+            if (effect.toggle) {
+                effect.toggle.addEventListener('change', (e) => {
+                    this.toggleEffect(effectName, e.target.checked);
+                });
+            }
+            
+            // Parameter controls
+            Object.keys(effect).forEach(paramName => {
+                if (paramName !== 'toggle' && effect[paramName]) {
+                    const control = effect[paramName];
+                    control.addEventListener('input', (e) => {
+                        this.updateEffectParameter(effectName, paramName, parseFloat(e.target.value));
+                        this.updateEffectValueDisplay(effectName, paramName, e.target.value);
+                    });
+                }
+            });
+        });
+    }
+
+    toggleEffect(effectName, enabled) {
+        this.synthesizer.toggleEffect(effectName, enabled);
+        
+        // Update UI
+        const effectPedal = this.effectElements[effectName].toggle.closest('.effect-pedal');
+        effectPedal.classList.toggle('active', enabled);
+    }
+
+    updateEffectParameter(effectName, paramName, value) {
+        this.synthesizer.updateEffect(effectName, paramName, value);
+    }
+
+    updateEffectValueDisplay(effectName, paramName, value) {
+        const control = this.effectElements[effectName][paramName];
+        const valueDisplay = control.parentElement.querySelector('.knob-value');
+        
+        if (valueDisplay) {
+            let displayValue = value;
+            
+            // Format value based on parameter type
+            switch (paramName) {
+                case 'time':
+                    displayValue = value + 'ms';
+                    break;
+                case 'feedback':
+                case 'mix':
+                case 'depth':
+                    displayValue = value + '%';
+                    break;
+                case 'rate':
+                    displayValue = value + 'Hz';
+                    break;
+                case 'threshold':
+                case 'bass':
+                case 'mid':
+                case 'treble':
+                    displayValue = (value > 0 ? '+' : '') + value + 'dB';
+                    break;
+                case 'ratio':
+                    displayValue = value + ':1';
+                    break;
+                case 'frequency':
+                    displayValue = value + 'Hz';
+                    break;
+                default:
+                    displayValue = value;
+            }
+            
+            valueDisplay.textContent = displayValue;
+        }
+    }
+
+    applyEffectPreset() {
+        const presetName = this.effectPresetSelect.value;
+        this.synthesizer.applyEffectPreset(presetName);
+        this.updateEffectUI();
+    }
+
+    updateEffectUI() {
+        const effectSettings = this.synthesizer.getEffectSettings();
+        
+        Object.keys(effectSettings).forEach(effectName => {
+            const effect = effectSettings[effectName];
+            const uiElements = this.effectElements[effectName];
+            
+            if (uiElements) {
+                // Update toggle
+                if (uiElements.toggle) {
+                    uiElements.toggle.checked = effect.enabled;
+                    const effectPedal = uiElements.toggle.closest('.effect-pedal');
+                    effectPedal.classList.toggle('active', effect.enabled);
+                }
+                
+                // Update parameters
+                Object.keys(effect).forEach(paramName => {
+                    if (paramName !== 'enabled' && paramName !== 'node' && paramName !== 'nodes' && uiElements[paramName]) {
+                        uiElements[paramName].value = effect[paramName];
+                        this.updateEffectValueDisplay(effectName, paramName, effect[paramName]);
+                    }
+                });
+            }
+        });
+    }
+
+    initializeEffectUI() {
+        // Initialize all effect value displays
+        Object.keys(this.effectElements).forEach(effectName => {
+            const effect = this.effectElements[effectName];
+            Object.keys(effect).forEach(paramName => {
+                if (paramName !== 'toggle' && effect[paramName]) {
+                    const control = effect[paramName];
+                    this.updateEffectValueDisplay(effectName, paramName, control.value);
+                }
+            });
+        });
     }
 
     async generateSolo() {
