@@ -22,7 +22,9 @@ class GuitarSynthesizer {
             delay: { enabled: false, time: 300, feedback: 30, mix: 25, node: null },
             chorus: { enabled: false, rate: 1.5, depth: 50, node: null },
             compressor: { enabled: false, threshold: -24, ratio: 4, node: null },
-            wah: { enabled: false, frequency: 800, q: 10, node: null },
+            wah: { enabled: false, frequency: 800, q: 10, sensitivity: 50, autoSweep: false, node: null },
+            phaser: { enabled: false, rate: 0.5, depth: 70, feedback: 30, node: null },
+            flanger: { enabled: false, rate: 0.3, depth: 80, feedback: 20, delay: 5, node: null },
             eq: { enabled: false, bass: 0, mid: 0, treble: 0, nodes: null }
         };
 
@@ -96,6 +98,8 @@ class GuitarSynthesizer {
         this.createChorusEffect();
         this.createCompressorEffect();
         this.createWahEffect();
+        this.createPhaserEffect();
+        this.createFlangerEffect();
         this.createEQEffect();
         
         // Build initial effect chain
@@ -189,14 +193,128 @@ class GuitarSynthesizer {
 
     createWahEffect() {
         const filter = this.audioContext.createBiquadFilter();
+        const envelopeFollower = this.audioContext.createAnalyser();
+        const lfo = this.audioContext.createOscillator();
+        const lfoGain = this.audioContext.createGain();
+        
         filter.type = 'bandpass';
+        envelopeFollower.fftSize = 256;
+        envelopeFollower.smoothingTimeConstant = 0.8;
+        
+        // Auto-sweep LFO
+        lfo.frequency.setValueAtTime(0.5, this.audioContext.currentTime);
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
         
         this.effects.wah.node = { 
             filter, 
-            input: filter, 
+            envelopeFollower,
+            lfo,
+            lfoGain,
+            input: (source) => { 
+                source.connect(filter); 
+                source.connect(envelopeFollower); 
+            }, 
             output: filter 
         };
         this.updateWahSettings();
+    }
+
+    createPhaserEffect() {
+        const allpassFilters = [];
+        const lfo = this.audioContext.createOscillator();
+        const lfoGain = this.audioContext.createGain();
+        const feedbackGain = this.audioContext.createGain();
+        const wetGain = this.audioContext.createGain();
+        const dryGain = this.audioContext.createGain();
+        const mixGain = this.audioContext.createGain();
+        
+        // Create 6 allpass filters for rich phasing
+        for (let i = 0; i < 6; i++) {
+            const allpass = this.audioContext.createBiquadFilter();
+            allpass.type = 'allpass';
+            allpass.frequency.setValueAtTime(200 + i * 300, this.audioContext.currentTime);
+            allpass.Q.setValueAtTime(1, this.audioContext.currentTime);
+            allpassFilters.push(allpass);
+            
+            if (i > 0) {
+                allpassFilters[i - 1].connect(allpass);
+            }
+            
+            // Connect LFO to each filter's frequency
+            lfoGain.connect(allpass.frequency);
+        }
+        
+        // Connect feedback
+        allpassFilters[allpassFilters.length - 1].connect(feedbackGain);
+        feedbackGain.connect(allpassFilters[0]);
+        
+        // Wet/dry mix
+        allpassFilters[allpassFilters.length - 1].connect(wetGain);
+        wetGain.connect(mixGain);
+        dryGain.connect(mixGain);
+        
+        lfo.connect(lfoGain);
+        lfo.start();
+        
+        this.effects.phaser.node = {
+            allpassFilters,
+            lfo,
+            lfoGain,
+            feedback: feedbackGain,
+            wet: wetGain,
+            dry: dryGain,
+            mix: mixGain,
+            input: (source) => { 
+                source.connect(allpassFilters[0]); 
+                source.connect(dryGain); 
+            },
+            output: mixGain
+        };
+        this.updatePhaserSettings();
+    }
+
+    createFlangerEffect() {
+        const delayNode = this.audioContext.createDelay(0.02);
+        const lfo = this.audioContext.createOscillator();
+        const lfoGain = this.audioContext.createGain();
+        const feedbackGain = this.audioContext.createGain();
+        const wetGain = this.audioContext.createGain();
+        const dryGain = this.audioContext.createGain();
+        const mixGain = this.audioContext.createGain();
+        
+        // LFO modulates delay time for flanging effect
+        lfo.frequency.setValueAtTime(this.effects.flanger.rate, this.audioContext.currentTime);
+        lfo.connect(lfoGain);
+        lfoGain.connect(delayNode.delayTime);
+        
+        // Feedback loop
+        delayNode.connect(feedbackGain);
+        feedbackGain.connect(delayNode);
+        
+        // Wet/dry mix
+        delayNode.connect(wetGain);
+        wetGain.connect(mixGain);
+        dryGain.connect(mixGain);
+        
+        lfo.start();
+        
+        this.effects.flanger.node = {
+            delay: delayNode,
+            lfo,
+            lfoGain,
+            feedback: feedbackGain,
+            wet: wetGain,
+            dry: dryGain,
+            mix: mixGain,
+            input: (source) => { 
+                source.connect(delayNode); 
+                source.connect(dryGain); 
+            },
+            output: mixGain
+        };
+        this.updateFlangerSettings();
     }
 
     createEQEffect() {
@@ -299,11 +417,50 @@ class GuitarSynthesizer {
     updateWahSettings() {
         if (!this.effects.wah.node) return;
         
-        const { frequency, q } = this.effects.wah;
-        const { filter } = this.effects.wah.node;
+        const { frequency, q, sensitivity, autoSweep } = this.effects.wah;
+        const { filter, lfo, lfoGain } = this.effects.wah.node;
         
         filter.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
         filter.Q.setValueAtTime(q, this.audioContext.currentTime);
+        
+        // Auto-sweep functionality
+        if (autoSweep) {
+            lfoGain.gain.setValueAtTime(frequency * 0.5 * (sensitivity / 100), this.audioContext.currentTime);
+        } else {
+            lfoGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+        }
+    }
+
+    updatePhaserSettings() {
+        if (!this.effects.phaser.node) return;
+        
+        const { rate, depth, feedback } = this.effects.phaser;
+        const { lfo, lfoGain, feedback: feedbackGain, wet, dry } = this.effects.phaser.node;
+        
+        lfo.frequency.setValueAtTime(rate, this.audioContext.currentTime);
+        lfoGain.gain.setValueAtTime(depth * 2, this.audioContext.currentTime);
+        feedbackGain.gain.setValueAtTime(feedback / 100, this.audioContext.currentTime);
+        
+        const wetLevel = 0.5;
+        const dryLevel = 0.5;
+        wet.gain.setValueAtTime(wetLevel, this.audioContext.currentTime);
+        dry.gain.setValueAtTime(dryLevel, this.audioContext.currentTime);
+    }
+
+    updateFlangerSettings() {
+        if (!this.effects.flanger.node) return;
+        
+        const { rate, depth, feedback, delay } = this.effects.flanger;
+        const { lfo, lfoGain, feedback: feedbackGain, wet, dry } = this.effects.flanger.node;
+        
+        lfo.frequency.setValueAtTime(rate, this.audioContext.currentTime);
+        lfoGain.gain.setValueAtTime((delay / 1000) * (depth / 100), this.audioContext.currentTime);
+        feedbackGain.gain.setValueAtTime(feedback / 100, this.audioContext.currentTime);
+        
+        const wetLevel = 0.5;
+        const dryLevel = 0.5;
+        wet.gain.setValueAtTime(wetLevel, this.audioContext.currentTime);
+        dry.gain.setValueAtTime(dryLevel, this.audioContext.currentTime);
     }
 
     updateEQSettings() {
@@ -320,8 +477,8 @@ class GuitarSynthesizer {
     rebuildEffectChain() {
         this.effectChain = [];
         
-        // Add enabled effects to chain in order
-        const effectOrder = ['compressor', 'distortion', 'wah', 'eq', 'chorus', 'delay'];
+        // Add enabled effects to chain in proper funk/guitar order
+        const effectOrder = ['compressor', 'distortion', 'wah', 'phaser', 'flanger', 'eq', 'chorus', 'delay'];
         
         effectOrder.forEach(effectName => {
             const effect = this.effects[effectName];
@@ -352,6 +509,12 @@ class GuitarSynthesizer {
                 break;
             case 'wah':
                 this.updateWahSettings();
+                break;
+            case 'phaser':
+                this.updatePhaserSettings();
+                break;
+            case 'flanger':
+                this.updateFlangerSettings();
                 break;
             case 'eq':
                 this.updateEQSettings();
@@ -583,6 +746,8 @@ class GuitarSynthesizer {
                 chorus: { enabled: false },
                 compressor: { enabled: false },
                 wah: { enabled: false },
+                phaser: { enabled: false },
+                flanger: { enabled: false },
                 eq: { enabled: false }
             },
             blues: {
@@ -591,6 +756,8 @@ class GuitarSynthesizer {
                 chorus: { enabled: false },
                 compressor: { enabled: true, threshold: -18, ratio: 3 },
                 wah: { enabled: false },
+                phaser: { enabled: false },
+                flanger: { enabled: false },
                 eq: { enabled: true, bass: 2, mid: 3, treble: 1 }
             },
             rock: {
@@ -599,6 +766,8 @@ class GuitarSynthesizer {
                 chorus: { enabled: false },
                 compressor: { enabled: true, threshold: -15, ratio: 6 },
                 wah: { enabled: false },
+                phaser: { enabled: false },
+                flanger: { enabled: false },
                 eq: { enabled: true, bass: 4, mid: 2, treble: 3 }
             },
             lead: {
@@ -607,7 +776,29 @@ class GuitarSynthesizer {
                 chorus: { enabled: false },
                 compressor: { enabled: true, threshold: -12, ratio: 8 },
                 wah: { enabled: false },
+                phaser: { enabled: false },
+                flanger: { enabled: false },
                 eq: { enabled: true, bass: 1, mid: 5, treble: 4 }
+            },
+            funk: {
+                distortion: { enabled: false },
+                delay: { enabled: false },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -20, ratio: 4 },
+                wah: { enabled: true, frequency: 600, q: 15, sensitivity: 70, autoSweep: true },
+                phaser: { enabled: true, rate: 0.3, depth: 60, feedback: 25 },
+                flanger: { enabled: false },
+                eq: { enabled: true, bass: 1, mid: 2, treble: -1 }
+            },
+            autowah: {
+                distortion: { enabled: true, gain: 25, tone: 55 },
+                delay: { enabled: false },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -16, ratio: 5 },
+                wah: { enabled: true, frequency: 800, q: 20, sensitivity: 80, autoSweep: true },
+                phaser: { enabled: false },
+                flanger: { enabled: false },
+                eq: { enabled: true, bass: 0, mid: 3, treble: 1 }
             },
             ambient: {
                 distortion: { enabled: false },
@@ -615,6 +806,8 @@ class GuitarSynthesizer {
                 chorus: { enabled: true, rate: 0.8, depth: 70 },
                 compressor: { enabled: false },
                 wah: { enabled: false },
+                phaser: { enabled: true, rate: 0.2, depth: 50, feedback: 20 },
+                flanger: { enabled: true, rate: 0.15, depth: 60, feedback: 15, delay: 8 },
                 eq: { enabled: true, bass: -2, mid: 0, treble: 2 }
             }
         };

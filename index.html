@@ -171,7 +171,7 @@
                                 <label class="effect-toggle">
                                     <input type="checkbox" id="wah-toggle">
                                     <span class="toggle-switch"></span>
-                                    Auto-Wah
+                                    Wah-Wah
                                 </label>
                             </div>
                             <div class="effect-controls">
@@ -184,6 +184,75 @@
                                     <label for="wah-q">Q Factor</label>
                                     <input type="range" id="wah-q" min="1" max="30" value="10" class="effect-knob">
                                     <span class="knob-value">10</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="wah-sensitivity">Sensitivity</label>
+                                    <input type="range" id="wah-sensitivity" min="0" max="100" value="50" class="effect-knob">
+                                    <span class="knob-value">50%</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="wah-autosweep">Auto-Sweep</label>
+                                    <input type="checkbox" id="wah-autosweep" class="effect-checkbox">
+                                    <span class="checkbox-label">ON/OFF</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="phaser-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Phaser
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="phaser-rate">Rate</label>
+                                    <input type="range" id="phaser-rate" min="0.1" max="2" value="0.5" step="0.1" class="effect-knob">
+                                    <span class="knob-value">0.5Hz</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="phaser-depth">Depth</label>
+                                    <input type="range" id="phaser-depth" min="0" max="100" value="70" class="effect-knob">
+                                    <span class="knob-value">70%</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="phaser-feedback">Feedback</label>
+                                    <input type="range" id="phaser-feedback" min="0" max="90" value="30" class="effect-knob">
+                                    <span class="knob-value">30%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="effect-pedal">
+                            <div class="effect-header">
+                                <label class="effect-toggle">
+                                    <input type="checkbox" id="flanger-toggle">
+                                    <span class="toggle-switch"></span>
+                                    Flanger
+                                </label>
+                            </div>
+                            <div class="effect-controls">
+                                <div class="knob-control">
+                                    <label for="flanger-rate">Rate</label>
+                                    <input type="range" id="flanger-rate" min="0.1" max="1" value="0.3" step="0.1" class="effect-knob">
+                                    <span class="knob-value">0.3Hz</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="flanger-depth">Depth</label>
+                                    <input type="range" id="flanger-depth" min="0" max="100" value="80" class="effect-knob">
+                                    <span class="knob-value">80%</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="flanger-feedback">Feedback</label>
+                                    <input type="range" id="flanger-feedback" min="0" max="90" value="20" class="effect-knob">
+                                    <span class="knob-value">20%</span>
+                                </div>
+                                <div class="knob-control">
+                                    <label for="flanger-delay">Delay</label>
+                                    <input type="range" id="flanger-delay" min="1" max="20" value="5" class="effect-knob">
+                                    <span class="knob-value">5ms</span>
                                 </div>
                             </div>
                         </div>
@@ -224,6 +293,8 @@
                             <option value="blues">Classic Blues</option>
                             <option value="rock">Rock Crunch</option>
                             <option value="lead">Lead Guitar</option>
+                            <option value="funk">🎵 Funk Master</option>
+                            <option value="autowah">🌊 Auto-Wah</option>
                             <option value="ambient">Ambient</option>
                         </select>
                         <button id="apply-preset-btn" class="btn btn-secondary">Apply Preset</button>

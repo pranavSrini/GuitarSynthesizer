@@ -628,6 +628,24 @@ body {
     background: radial-gradient(circle at 30% 30%, #ffffff, #4285f4);
 }
 
+/* Effect checkbox styling */
+.effect-checkbox {
+    width: 20px;
+    height: 20px;
+    margin: 5px auto;
+    cursor: pointer;
+    accent-color: #4285f4;
+}
+
+.checkbox-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #666;
+    margin-top: 2px;
+    text-align: center;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {

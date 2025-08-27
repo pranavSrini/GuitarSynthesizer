@@ -72,7 +72,22 @@ class BluesApp {
             wah: {
                 toggle: document.getElementById('wah-toggle'),
                 frequency: document.getElementById('wah-frequency'),
-                q: document.getElementById('wah-q')
+                q: document.getElementById('wah-q'),
+                sensitivity: document.getElementById('wah-sensitivity'),
+                autoSweep: document.getElementById('wah-autosweep')
+            },
+            phaser: {
+                toggle: document.getElementById('phaser-toggle'),
+                rate: document.getElementById('phaser-rate'),
+                depth: document.getElementById('phaser-depth'),
+                feedback: document.getElementById('phaser-feedback')
+            },
+            flanger: {
+                toggle: document.getElementById('flanger-toggle'),
+                rate: document.getElementById('flanger-rate'),
+                depth: document.getElementById('flanger-depth'),
+                feedback: document.getElementById('flanger-feedback'),
+                delay: document.getElementById('flanger-delay')
             },
             eq: {
                 toggle: document.getElementById('eq-toggle'),
@@ -134,10 +149,17 @@ class BluesApp {
             Object.keys(effect).forEach(paramName => {
                 if (paramName !== 'toggle' && effect[paramName]) {
                     const control = effect[paramName];
-                    control.addEventListener('input', (e) => {
-                        this.updateEffectParameter(effectName, paramName, parseFloat(e.target.value));
-                        this.updateEffectValueDisplay(effectName, paramName, e.target.value);
-                    });
+                    
+                    if (control.type === 'checkbox') {
+                        control.addEventListener('change', (e) => {
+                            this.updateEffectParameter(effectName, paramName, e.target.checked);
+                        });
+                    } else {
+                        control.addEventListener('input', (e) => {
+                            this.updateEffectParameter(effectName, paramName, parseFloat(e.target.value));
+                            this.updateEffectValueDisplay(effectName, paramName, e.target.value);
+                        });
+                    }
                 }
             });
         });
@@ -165,11 +187,13 @@ class BluesApp {
             // Format value based on parameter type
             switch (paramName) {
                 case 'time':
+                case 'delay':
                     displayValue = value + 'ms';
                     break;
                 case 'feedback':
                 case 'mix':
                 case 'depth':
+                case 'sensitivity':
                     displayValue = value + '%';
                     break;
                 case 'rate':
@@ -186,6 +210,9 @@ class BluesApp {
                     break;
                 case 'frequency':
                     displayValue = value + 'Hz';
+                    break;
+                case 'q':
+                    displayValue = value;
                     break;
                 default:
                     displayValue = value;
@@ -219,8 +246,13 @@ class BluesApp {
                 // Update parameters
                 Object.keys(effect).forEach(paramName => {
                     if (paramName !== 'enabled' && paramName !== 'node' && paramName !== 'nodes' && uiElements[paramName]) {
-                        uiElements[paramName].value = effect[paramName];
-                        this.updateEffectValueDisplay(effectName, paramName, effect[paramName]);
+                        const control = uiElements[paramName];
+                        if (control.type === 'checkbox') {
+                            control.checked = effect[paramName];
+                        } else {
+                            control.value = effect[paramName];
+                            this.updateEffectValueDisplay(effectName, paramName, effect[paramName]);
+                        }
                     }
                 });
             }
