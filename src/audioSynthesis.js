@@ -809,6 +809,16 @@ class GuitarSynthesizer {
                 phaser: { enabled: true, rate: 0.2, depth: 50, feedback: 20 },
                 flanger: { enabled: true, rate: 0.15, depth: 60, feedback: 15, delay: 8 },
                 eq: { enabled: true, bass: -2, mid: 0, treble: 2 }
+            },
+            reggae: {
+                distortion: { enabled: false },
+                delay: { enabled: true, time: 400, feedback: 35, mix: 40 },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -22, ratio: 3 },
+                wah: { enabled: false },
+                phaser: { enabled: true, rate: 0.4, depth: 45, feedback: 15 },
+                flanger: { enabled: false },
+                eq: { enabled: true, bass: 3, mid: -2, treble: 1 }
             }
         };
 

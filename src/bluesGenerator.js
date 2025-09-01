@@ -37,6 +37,9 @@ class BluesPentatonicGenerator {
         // Blues techniques
         this.techniques = ['bend', 'slide', 'vibrato', 'hammer', 'pull', 'normal'];
         
+        // Reggae techniques
+        this.reggaeTechniques = ['mute', 'chop', 'upstroke', 'downstroke', 'normal'];
+        
         // Note names for display
         this.noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     }
@@ -97,6 +100,30 @@ class BluesPentatonicGenerator {
                 hit: pattern[i % pattern.length],
                 subdivision: i % 8,
                 emphasis: i % 4 === 0 ? 'strong' : (i % 2 === 0 ? 'medium' : 'weak')
+            });
+        }
+        
+        return rhythm;
+    }
+
+    // Generate reggae rhythm pattern
+    generateReggaeRhythm(length = 8) {
+        const reggaePatterns = [
+            [1, 0, 0, 1, 0, 0, 1, 0], // Off-beat emphasis
+            [0, 1, 0, 0, 0, 1, 0, 0], // Skank rhythm
+            [1, 0, 0, 0, 1, 0, 0, 1], // One-drop feel
+            [0, 0, 1, 0, 0, 0, 1, 0]  // Steppers rhythm
+        ];
+        
+        const pattern = reggaePatterns[Math.floor(Math.random() * reggaePatterns.length)];
+        const rhythm = [];
+        
+        for (let i = 0; i < length; i++) {
+            rhythm.push({
+                hit: pattern[i % pattern.length],
+                subdivision: i % 8,
+                emphasis: i % 2 === 1 ? 'strong' : 'weak', // Off-beat emphasis
+                technique: this.reggaeTechniques[Math.floor(Math.random() * this.reggaeTechniques.length)]
             });
         }
         
