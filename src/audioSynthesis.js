@@ -829,6 +829,16 @@ class GuitarSynthesizer {
                 phaser: { enabled: false },
                 flanger: { enabled: false },
                 eq: { enabled: true, bass: 1, mid: 2, treble: 2 }
+            },
+            heavymetal: {
+                distortion: { enabled: true, gain: 85, tone: 40 },
+                delay: { enabled: true, time: 200, feedback: 40, mix: 25 },
+                chorus: { enabled: false },
+                compressor: { enabled: true, threshold: -10, ratio: 10 },
+                wah: { enabled: true, frequency: 1000, q: 25, sensitivity: 60, autoSweep: false },
+                phaser: { enabled: false },
+                flanger: { enabled: true, rate: 0.2, depth: 90, feedback: 30, delay: 3 },
+                eq: { enabled: true, bass: 5, mid: -3, treble: 4 }
             }
         };
 

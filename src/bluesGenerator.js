@@ -43,6 +43,9 @@ class BluesPentatonicGenerator {
         // Soft Rock techniques
         this.softRockTechniques = ['fingerpick', 'arpeggio', 'sustain', 'harmonics', 'normal'];
         
+        // Heavy Metal techniques
+        this.heavyMetalTechniques = ['palm_mute', 'power_chord', 'tremolo', 'pinch_harmonic', 'normal'];
+        
         // Note names for display
         this.noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     }
@@ -151,6 +154,30 @@ class BluesPentatonicGenerator {
                 subdivision: i % 8,
                 emphasis: i % 4 === 0 ? 'strong' : 'medium', // Gentle emphasis
                 technique: this.softRockTechniques[Math.floor(Math.random() * this.softRockTechniques.length)]
+            });
+        }
+        
+        return rhythm;
+    }
+
+    // Generate heavy metal rhythm pattern
+    generateHeavyMetalRhythm(length = 8) {
+        const heavyMetalPatterns = [
+            [1, 1, 1, 1, 1, 1, 1, 1], // Aggressive straight eighths
+            [1, 0, 1, 1, 1, 0, 1, 1], // Gallop rhythm
+            [1, 1, 0, 1, 1, 1, 0, 1], // Thrash pattern
+            [1, 0, 1, 0, 1, 1, 1, 0]  // Mixed aggression
+        ];
+        
+        const pattern = heavyMetalPatterns[Math.floor(Math.random() * heavyMetalPatterns.length)];
+        const rhythm = [];
+        
+        for (let i = 0; i < length; i++) {
+            rhythm.push({
+                hit: pattern[i % pattern.length],
+                subdivision: i % 8,
+                emphasis: 'strong', // Always strong in metal
+                technique: this.heavyMetalTechniques[Math.floor(Math.random() * this.heavyMetalTechniques.length)]
             });
         }
         
