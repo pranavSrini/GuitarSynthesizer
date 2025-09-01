@@ -40,6 +40,9 @@ class BluesPentatonicGenerator {
         // Reggae techniques
         this.reggaeTechniques = ['mute', 'chop', 'upstroke', 'downstroke', 'normal'];
         
+        // Soft Rock techniques
+        this.softRockTechniques = ['fingerpick', 'arpeggio', 'sustain', 'harmonics', 'normal'];
+        
         // Note names for display
         this.noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     }
@@ -124,6 +127,30 @@ class BluesPentatonicGenerator {
                 subdivision: i % 8,
                 emphasis: i % 2 === 1 ? 'strong' : 'weak', // Off-beat emphasis
                 technique: this.reggaeTechniques[Math.floor(Math.random() * this.reggaeTechniques.length)]
+            });
+        }
+        
+        return rhythm;
+    }
+
+    // Generate soft rock rhythm pattern
+    generateSoftRockRhythm(length = 8) {
+        const softRockPatterns = [
+            [1, 0, 1, 0, 1, 0, 1, 0], // Straight eighths with feel
+            [1, 0, 0, 1, 0, 1, 0, 0], // Gentle syncopation
+            [1, 0, 1, 1, 0, 1, 0, 1], // Smooth flow
+            [1, 0, 0, 0, 1, 0, 1, 0]  // Spacious feel
+        ];
+        
+        const pattern = softRockPatterns[Math.floor(Math.random() * softRockPatterns.length)];
+        const rhythm = [];
+        
+        for (let i = 0; i < length; i++) {
+            rhythm.push({
+                hit: pattern[i % pattern.length],
+                subdivision: i % 8,
+                emphasis: i % 4 === 0 ? 'strong' : 'medium', // Gentle emphasis
+                technique: this.softRockTechniques[Math.floor(Math.random() * this.softRockTechniques.length)]
             });
         }
         
